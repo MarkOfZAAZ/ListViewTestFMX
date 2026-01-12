@@ -21,10 +21,10 @@ type
       const LocalClickPos: TPointF; const ItemObject: TListItemDrawable);
     procedure ListView1DeletingItem(Sender: TObject; AIndex: Integer;
       var ACanDelete: Boolean);
+    procedure ListView1PullRefresh(Sender: TObject);
   private
     { Private declarations }
     procedure PopulateList;
-    procedure EditItem(const AIndex: Integer);
     procedure ConfirmDelete(const AIndex: integer);
   public
     { Public declarations }
@@ -57,19 +57,18 @@ begin
       begin
         // Manual delete after confirmation
         if (AIndex >= 0) and (AIndex < ListView1.Items.Count) then
+        begin
+          // Do the ACTUAL record delete
+          //
+
+          // Now delete the item from the list, save re-populating!
           ListView1.Items.Delete(AIndex);
+        end;
       end;
       ListView1.Selected := nil;
       ListView1.SetFocus;
     end
   );
-end;
-
-procedure TForm3.EditItem(const AIndex: Integer);
-begin
-  if (AIndex < 0) or (AIndex >= ListView1.Items.Count) then
-    Exit;
-  ShowMessage('Edit item: ' + ListView1.Items[AIndex].Text);
 end;
 
 procedure TForm3.FormCreate(Sender: TObject);
@@ -89,6 +88,18 @@ end;
 procedure TForm3.ListView1ItemClickEx(const Sender: TObject; ItemIndex: Integer;
   const LocalClickPos: TPointF; const ItemObject: TListItemDrawable);
 begin
+  // Ensure the ListView actually has items
+  if ListView1.Items.Count = 0 then
+    Exit;
+
+  // Validate index
+  if (ItemIndex < 0) or (ItemIndex >= ListView1.Items.Count) then
+    Exit;
+
+  // Safety check
+  if ItemObject = nil then
+    Exit;
+
   // Trigger only when accessory (>) is tapped
   if ItemObject is TListItemAccessory then
   begin
@@ -96,6 +107,11 @@ begin
       'Accessory clicked for ' + ListView1.Items[ItemIndex].Text
     );
   end;
+end;
+
+procedure TForm3.ListView1PullRefresh(Sender: TObject);
+begin
+  PopulateList;
 end;
 
 procedure TForm3.PopulateList;
